@@ -8,3 +8,9 @@ type GetTestByIdInput struct {
 type GetTestByIdOutput struct {
 	Name string
 }
+
+type CreateEstateInput struct {
+	ID     string
+	Length int
+	Width  int
+}

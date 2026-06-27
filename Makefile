@@ -1,6 +1,6 @@
 
 
-.PHONY: clean all init generate generate_mocks
+.PHONY: clean all init generate generate_mocks migrate rollback
 
 all: build/main
 
@@ -22,6 +22,14 @@ test:
 test_api:
 	go clean -testcache
 	go test ./tests/...
+
+migrate:
+	@echo "Applying database.sql to the running Postgres container..."
+	docker compose exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d database < database.sql
+
+rollback:
+	@echo "Rolling back dummy data from the running Postgres container..."
+	docker compose exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d database < database.down.sql
 
 generate: generated generate_mocks
 

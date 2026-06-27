@@ -9,3 +9,8 @@ func (r *Repository) GetTestById(ctx context.Context, input GetTestByIdInput) (o
 	}
 	return
 }
+
+func (r *Repository) CreateEstate(ctx context.Context, input CreateEstateInput) error {
+	_, err := r.Db.ExecContext(ctx, "INSERT INTO estates (name, length_plot, width_plot) VALUES ($1, $2, $3)", input.ID, input.Length, input.Width)
+	return err
+}

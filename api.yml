@@ -39,6 +39,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /estate:
+    post:
+      summary: Create a new estate.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEstateRequest"
+      responses:
+        '201':
+          description: Estate created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateEstateResponse"
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HelloResponse:
@@ -49,6 +71,27 @@ components:
         message:
           type: string
           example: Hello, World!
+    CreateEstateRequest:
+      type: object
+      required:
+        - length
+        - width
+      properties:
+        length:
+          type: integer
+          minimum: 1
+          maximum: 50000
+        width:
+          type: integer
+          minimum: 1
+          maximum: 50000
+    CreateEstateResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
     ErrorResponse:
       type: object
       required:
