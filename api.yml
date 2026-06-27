@@ -61,6 +61,90 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /estate/{id}/tree:
+    post:
+      summary: Create a new tree in a given estate.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTreeRequest"
+      responses:
+        '201':
+          description: Tree created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTreeResponse"
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '404':
+          description: Estate not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /estate/{id}/stats:
+    get:
+      summary: Get tree statistics for a given estate.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tree statistics returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TreeStatsResponse"
+        '404':
+          description: Estate not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /estate/{id}/drone-plan:
+    get:
+      summary: Get total drone travel distance for a given estate.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: max_distance
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Drone distance returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DronePlanResponse"
+        '404':
+          description: Estate not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HelloResponse:
@@ -92,6 +176,74 @@ components:
       properties:
         id:
           type: string
+    CreateTreeRequest:
+      type: object
+      required:
+        - x
+        - y
+        - height
+      properties:
+        x:
+          type: integer
+          minimum: 1
+          maximum: 50000
+        y:
+          type: integer
+          minimum: 1
+          maximum: 50000
+        height:
+          type: integer
+          minimum: 1
+          maximum: 30
+    CreateTreeResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+    TreeStatsResponse:
+      type: object
+      required:
+        - count
+        - max
+        - min
+        - median
+      properties:
+        count:
+          type: integer
+          format: int64
+        max:
+          type: integer
+          format: int64
+        min:
+          type: integer
+          format: int64
+        median:
+          type: integer
+          format: int64
+    DronePlanResponse:
+      type: object
+      required:
+        - distance
+      properties:
+        distance:
+          type: integer
+          format: int64
+        rest:
+          $ref: "#/components/schemas/DronePlanRest"
+    DronePlanRest:
+      type: object
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: integer
+          format: int64
+        y:
+          type: integer
+          format: int64
     ErrorResponse:
       type: object
       required:

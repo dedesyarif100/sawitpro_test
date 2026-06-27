@@ -9,4 +9,9 @@ import "context"
 type RepositoryInterface interface {
 	GetTestById(ctx context.Context, input GetTestByIdInput) (output GetTestByIdOutput, err error)
 	CreateEstate(ctx context.Context, input CreateEstateInput) error
+	CreateTree(ctx context.Context, input CreateTreeInput) error
+	EstateExists(ctx context.Context, estateID string) (bool, error)
+	TreeExists(ctx context.Context, estateID string, x, y int) (bool, error)
+	GetTreeStats(ctx context.Context, estateID string) (TreeStats, error)
+	GetDronePlanSummary(ctx context.Context, estateID string) (DronePlanSummary, error)
 }

@@ -9,7 +9,11 @@
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE TABLE IF NOT EXISTS estates (
+DROP TABLE IF EXISTS drone_simulations CASCADE;
+DROP TABLE IF EXISTS trees CASCADE;
+DROP TABLE IF EXISTS estates CASCADE;
+
+CREATE TABLE estates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     name VARCHAR(100) NOT NULL,
@@ -25,9 +29,9 @@ CREATE TABLE IF NOT EXISTS estates (
 
 CREATE TABLE IF NOT EXISTS trees (
 
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY,
 
-    estate_id BIGINT NOT NULL,
+    estate_id UUID NOT NULL,
 
     plot_x INT NOT NULL,
 
@@ -47,9 +51,9 @@ CREATE TABLE IF NOT EXISTS trees (
 
 CREATE TABLE IF NOT EXISTS drone_simulations (
 
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY,
 
-    estate_id BIGINT NOT NULL,
+    estate_id UUID NOT NULL,
 
     total_horizontal_distance INT,
 
@@ -67,58 +71,43 @@ CREATE TABLE IF NOT EXISTS drone_simulations (
 );
 
 INSERT INTO estates (id, name, length_plot, width_plot)
-SELECT 1, 'Estate Alpha', 10, 10
+SELECT '11111111-1111-1111-1111-111111111111'::uuid, 'Estate Alpha', 10, 10
 WHERE NOT EXISTS (
-    SELECT 1 FROM estates WHERE id = 1
+    SELECT 1 FROM estates WHERE id = '11111111-1111-1111-1111-111111111111'::uuid
 );
 
 INSERT INTO estates (id, name, length_plot, width_plot)
-SELECT 2, 'Estate Beta', 12, 8
+SELECT '22222222-2222-2222-2222-222222222222'::uuid, 'Estate Beta', 12, 8
 WHERE NOT EXISTS (
-    SELECT 1 FROM estates WHERE id = 2
+    SELECT 1 FROM estates WHERE id = '22222222-2222-2222-2222-222222222222'::uuid
 );
 
 INSERT INTO trees (id, estate_id, plot_x, plot_y, height)
-SELECT 1, 1, 1, 1, 12
+SELECT '33333333-3333-3333-3333-333333333333'::uuid, '11111111-1111-1111-1111-111111111111'::uuid, 1, 1, 12
 WHERE NOT EXISTS (
-    SELECT 1 FROM trees WHERE id = 1
+    SELECT 1 FROM trees WHERE id = '33333333-3333-3333-3333-333333333333'::uuid
 );
 
 INSERT INTO trees (id, estate_id, plot_x, plot_y, height)
-SELECT 2, 1, 2, 3, 15
+SELECT '44444444-4444-4444-4444-444444444444'::uuid, '11111111-1111-1111-1111-111111111111'::uuid, 2, 3, 15
 WHERE NOT EXISTS (
-    SELECT 1 FROM trees WHERE id = 2
+    SELECT 1 FROM trees WHERE id = '44444444-4444-4444-4444-444444444444'::uuid
 );
 
 INSERT INTO trees (id, estate_id, plot_x, plot_y, height)
-SELECT 3, 2, 4, 2, 9
+SELECT '55555555-5555-5555-5555-555555555555'::uuid, '22222222-2222-2222-2222-222222222222'::uuid, 4, 2, 9
 WHERE NOT EXISTS (
-    SELECT 1 FROM trees WHERE id = 3
+    SELECT 1 FROM trees WHERE id = '55555555-5555-5555-5555-555555555555'::uuid
 );
 
 INSERT INTO drone_simulations (id, estate_id, total_horizontal_distance, total_vertical_distance, total_distance, total_axis_turn)
-SELECT 1, 1, 20, 30, 50, 4
+SELECT '66666666-6666-6666-6666-666666666666'::uuid, '11111111-1111-1111-1111-111111111111'::uuid, 20, 30, 50, 4
 WHERE NOT EXISTS (
-    SELECT 1 FROM drone_simulations WHERE id = 1
+    SELECT 1 FROM drone_simulations WHERE id = '66666666-6666-6666-6666-666666666666'::uuid
 );
 
 INSERT INTO drone_simulations (id, estate_id, total_horizontal_distance, total_vertical_distance, total_distance, total_axis_turn)
-SELECT 2, 2, 14, 22, 36, 3
+SELECT '77777777-7777-7777-7777-777777777777'::uuid, '22222222-2222-2222-2222-222222222222'::uuid, 14, 22, 36, 3
 WHERE NOT EXISTS (
-    SELECT 1 FROM drone_simulations WHERE id = 2
-);
-
-SELECT setval(
-    pg_get_serial_sequence('estates', 'id'),
-    GREATEST(COALESCE((SELECT MAX(id) FROM estates), 1), 1)
-);
-
-SELECT setval(
-    pg_get_serial_sequence('trees', 'id'),
-    GREATEST(COALESCE((SELECT MAX(id) FROM trees), 1), 1)
-);
-
-SELECT setval(
-    pg_get_serial_sequence('drone_simulations', 'id'),
-    GREATEST(COALESCE((SELECT MAX(id) FROM drone_simulations), 1), 1)
+    SELECT 1 FROM drone_simulations WHERE id = '77777777-7777-7777-7777-777777777777'::uuid
 );
