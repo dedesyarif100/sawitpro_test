@@ -15,7 +15,7 @@ init: clean generate
 	go mod tidy
 	go mod vendor
 
-test:
+test_unit:
 	go clean -testcache
 	go test -short -coverprofile coverage.out -short -v ./...
 
