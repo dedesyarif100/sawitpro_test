@@ -1,0 +1,1 @@
+TRUNCATE TABLE drone_simulations, trees, estates;

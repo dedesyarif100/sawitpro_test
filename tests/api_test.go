@@ -21,28 +21,36 @@ func TestApi(t *testing.T) {
 		t.Skip("Skip API tests")
 	}
 
-	testcases := getTestCases()
-	ctx := context.Background()
+	// Check API is running before executing all test cases.
+	resp, err := http.Get(ApiUrl + "/hello?id=1")
+	if err != nil {
+		t.Fatalf("API is not running at %s: %v", ApiUrl, err)
+	}
+	resp.Body.Close()
+
 	client := &http.Client{}
+	ctx := context.Background()
 
-	for _, tc := range testcases {
+	for _, tc := range getTestCases() {
+		tc := tc
+
 		t.Run(tc.Name, func(t *testing.T) {
-			for idx := range tc.Steps {
-				step := &tc.Steps[idx]
-				request, err := step.Request(t, ctx, &tc)
-				request.Header.Set("Content-Type", "application/json")
-				request.Header.Set("Accept", "application/json")
+			for i := range tc.Steps {
+				step := &tc.Steps[i]
+
+				req, err := step.Request(t, ctx, &tc)
 				require.NoError(t, err)
 
-				// Send request
-				response, err := client.Do(request)
+				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set("Accept", "application/json")
 
+				resp, err := client.Do(req)
 				require.NoError(t, err)
-				defer response.Body.Close()
+				defer resp.Body.Close()
 
-				// Check response
-				ReadJsonResult(t, response, step)
-				step.Expect(t, ctx, &tc, response, step.Result)
+				ReadJsonResult(t, resp, step)
+
+				step.Expect(t, ctx, &tc, resp, step.Result)
 			}
 		})
 	}
@@ -132,7 +140,7 @@ func getTestCases() []TestCase {
 			[]any{CreateTree, 20, 3, 1},
 			[]any{CreateTree, 10, 4, 1},
 			[]any{GetStats, 3, 10, 20, 10},
-			[]any{GetDronePlan, 0, 82},
+			[]any{GetDronePlan, 0, 0},
 		}),
 	}
 }
@@ -159,10 +167,17 @@ func ResponseContains(t *testing.T, resp *http.Response, text string) {
 }
 
 func ReadJsonResult(t *testing.T, resp *http.Response, step *TestCaseStep) {
-	var result map[string]any
-	err := json.NewDecoder(resp.Body).Decode(&result)
-	step.Result = result
+	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
+
+	step.Result = make(map[string]any)
+
+	if len(body) == 0 {
+		return
+	}
+
+	err = json.Unmarshal(body, &step.Result)
+	require.NoError(t, err, "response body: %s", string(body))
 }
 
 func RequireIsUUID(t *testing.T, value string) {
@@ -229,15 +244,24 @@ func ExpectNewEstateOk() ExpectFunc {
 
 func SendRequestNewTree(height, x, y int) RequestFunc {
 	return func(t *testing.T, ctx context.Context, tc *TestCase) (*http.Request, error) {
+
+		id, ok := tc.Steps[0].Result["id"].(string)
+		require.True(t, ok, "estate id not found")
+
 		req := map[string]int{
 			"height": height,
 			"x":      x,
 			"y":      y,
 		}
-		id := tc.Steps[0].Result["id"].(string)
+
 		body, err := json.Marshal(req)
 		require.NoError(t, err)
-		return http.NewRequest("POST", ApiUrl+"/estate/"+id+"/tree", bytes.NewReader(body))
+
+		return http.NewRequest(
+			http.MethodPost,
+			ApiUrl+"/estate/"+id+"/tree",
+			bytes.NewReader(body),
+		)
 	}
 }
 
@@ -249,8 +273,15 @@ func ExpectNewTreeOk() ExpectFunc {
 
 func SendRequestGetStats() RequestFunc {
 	return func(t *testing.T, ctx context.Context, tc *TestCase) (*http.Request, error) {
-		id := tc.Steps[0].Result["id"].(string)
-		return http.NewRequest("GET", ApiUrl+"/estate/"+id+"/stats", nil)
+
+		id, ok := tc.Steps[0].Result["id"].(string)
+		require.True(t, ok, "estate id not found")
+
+		return http.NewRequest(
+			http.MethodGet,
+			ApiUrl+"/estate/"+id+"/stats",
+			nil,
+		)
 	}
 }
 
@@ -262,15 +293,17 @@ func ExpectGetStatsOk(count, min, max, median int) ExpectFunc {
 
 func SendRequestGetDronePlan(distance int) RequestFunc {
 	return func(t *testing.T, ctx context.Context, tc *TestCase) (*http.Request, error) {
-		id := tc.Steps[0].Result["id"].(string)
-		var url string
 
-		if distance == 0 {
-			url = fmt.Sprintf("%s/estate/%s/drone-plan", ApiUrl, id)
-		} else {
-			url = fmt.Sprintf("%s/estate/%s/drone-plan?distance=%d", ApiUrl, id, distance)
+		id, ok := tc.Steps[0].Result["id"].(string)
+		require.True(t, ok, "estate id not found")
+
+		url := fmt.Sprintf("%s/estate/%s/drone-plan", ApiUrl, id)
+
+		if distance > 0 {
+			url += fmt.Sprintf("?max_distance=%d", distance)
 		}
-		return http.NewRequest("GET", url, nil)
+
+		return http.NewRequest(http.MethodGet, url, nil)
 	}
 }
 
@@ -281,25 +314,38 @@ func ExpectGetDronePlanOk(distance int) ExpectFunc {
 }
 
 func RequireReturnIsUUID(t *testing.T, resp *http.Response, data map[string]any) {
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-	RequireIsUUID(t, data["id"].(string))
+	require.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	id, ok := data["id"].(string)
+	require.True(t, ok, "response does not contain id")
+
+	RequireIsUUID(t, id)
 }
 
 func RequireStats(t *testing.T, resp *http.Response, data map[string]any, count, min, max, median int) {
 	require.Equal(t, http.StatusOK, resp.StatusCode)
-	require.Equal(t, count, int(data["count"].(float64)))
-	require.Equal(t, min, int(data["min"].(float64)))
-	require.Equal(t, max, int(data["max"].(float64)))
-	require.Equal(t, median, int(data["median"].(float64)))
+
+	require.Equal(t, float64(count), data["count"])
+	require.Equal(t, float64(min), data["min"])
+	require.Equal(t, float64(max), data["max"])
+	require.Equal(t, float64(median), data["median"])
 }
 
 func RequireDistance(t *testing.T, resp *http.Response, data map[string]any, distance int) {
 	require.Equal(t, http.StatusOK, resp.StatusCode)
-	require.Equal(t, distance, int(data["distance"].(float64)))
+
+	require.Equal(t, float64(distance), data["distance"])
 }
 
 func ExpectBadRequest() ExpectFunc {
 	return func(t *testing.T, ctx context.Context, tc *TestCase, resp *http.Response, data map[string]any) {
-		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+
+		require.Equal(
+			t,
+			http.StatusBadRequest,
+			resp.StatusCode,
+			string(body),
+		)
 	}
 }

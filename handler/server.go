@@ -11,5 +11,5 @@ type NewServerOptions struct {
 }
 
 func NewServer(opts NewServerOptions) *Server {
-	return &Server{}
+	return &Server{Repository: opts.Repository}
 }

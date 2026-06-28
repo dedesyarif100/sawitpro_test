@@ -1,6 +1,6 @@
 
 
-.PHONY: clean all init generate generate_mocks
+.PHONY: clean all init generate generate_mocks migrate rollback
 
 all: build/main
 
@@ -15,13 +15,35 @@ init: clean generate
 	go mod tidy
 	go mod vendor
 
-test:
+test_unit:
 	go clean -testcache
 	go test -short -coverprofile coverage.out -short -v ./...
+
+coverage:
+	go clean -testcache
+	go test -coverprofile=coverage.out -covermode=atomic ./...
+
+coverage-html:
+	go clean -testcache
+	go test -coverprofile=coverage.out -covermode=atomic ./...
+	go tool cover -html=coverage.out
+
+coverage-func:
+	go clean -testcache
+	go test -coverprofile=coverage.out -covermode=atomic ./...
+	go tool cover -func=coverage.out
 
 test_api:
 	go clean -testcache
 	go test ./tests/...
+
+migrate:
+	@echo "Applying db_sawitpro_test.sql to the running Postgres container..."
+	docker compose exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d db_sawitpro_test < db_sawitpro_test.sql
+
+rollback:
+	@echo "Rolling back dummy data from the running Postgres container..."
+	docker compose exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d db_sawitpro_test < db_sawitpro_test.down.sql
 
 generate: generated generate_mocks
 
