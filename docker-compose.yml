@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8081:1323"
+      - "8080:1323"
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/db_sawitpro_test?sslmode=disable
     depends_on:
