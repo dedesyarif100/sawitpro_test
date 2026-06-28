@@ -19,6 +19,20 @@ test:
 	go clean -testcache
 	go test -short -coverprofile coverage.out -short -v ./...
 
+coverage:
+	go clean -testcache
+	go test -coverprofile=coverage.out -covermode=atomic ./...
+
+coverage-html:
+	go clean -testcache
+	go test -coverprofile=coverage.out -covermode=atomic ./...
+	go tool cover -html=coverage.out
+
+coverage-func:
+	go clean -testcache
+	go test -coverprofile=coverage.out -covermode=atomic ./...
+	go tool cover -func=coverage.out
+
 test_api:
 	go clean -testcache
 	go test ./tests/...

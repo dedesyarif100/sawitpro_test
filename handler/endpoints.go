@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/SawitProRecruitment/UserService/generated"
@@ -31,7 +30,6 @@ func (s *Server) PostEstate(ctx echo.Context) error {
 
 	id := uuid.NewString()
 	name := generateEstateName(id)
-	log.Println("debug name : ", name)
 	if err := s.Repository.CreateEstate(ctx.Request().Context(), repository.CreateEstateInput{ID: id, Name: name, Length: req.Length, Width: req.Width}); err != nil {
 		return ctx.JSON(http.StatusInternalServerError, generated.ErrorResponse{Message: "failed to create estate"})
 	}

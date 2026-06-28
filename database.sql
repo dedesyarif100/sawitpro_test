@@ -22,9 +22,9 @@ CREATE TABLE estates (
 
     width_plot INT NOT NULL,
 
-    created_at TIMESTAMP DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
 
-    updated_at TIMESTAMP DEFAULT now()
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS trees (
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS trees (
 
     height INT NOT NULL,
 
-    created_at TIMESTAMP DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
 
     CONSTRAINT fk_estate
         FOREIGN KEY (estate_id)
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS drone_simulations (
 
     total_axis_turn INT,
 
-    created_at TIMESTAMP DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
 
     CONSTRAINT fk_drone_simulation_estate
         FOREIGN KEY (estate_id)
