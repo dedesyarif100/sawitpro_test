@@ -38,12 +38,12 @@ test_api:
 	go test ./tests/...
 
 migrate:
-	@echo "Applying database.sql to the running Postgres container..."
-	docker compose exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d database < database.sql
+	@echo "Applying db_sawitpro_test.sql to the running Postgres container..."
+	docker compose exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d db_sawitpro_test < db_sawitpro_test.sql
 
 rollback:
 	@echo "Rolling back dummy data from the running Postgres container..."
-	docker compose exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d database < database.down.sql
+	docker compose exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d db_sawitpro_test < db_sawitpro_test.down.sql
 
 generate: generated generate_mocks
 
